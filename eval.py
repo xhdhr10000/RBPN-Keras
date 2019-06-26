@@ -32,7 +32,7 @@ def main(not_parsed_args):
     logging.info('Evaluation start...')
     loss_total = 0
     psnr_total = 0
-    for s in range(eval_dataset):
+    for s in range(len(eval_dataset)):
         x, y = eval_dataset.batch()
         log = model.test_on_batch(x, y)
         logging.info('Step %d, loss %f psnr %f' % (s, log[0], log[1]))

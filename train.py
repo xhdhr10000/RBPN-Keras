@@ -67,7 +67,7 @@ def main(not_parsed_args):
     logging.info('Training start')
     for e in range(last_epoch, FLAGS.epochs):
         tensorboard.on_epoch_begin(e)
-        for s in range(last_step+1, len(train_set) / FLAGS.batch_size):
+        for s in range(last_step+1, len(train_set) // FLAGS.batch_size):
             tensorboard.on_batch_begin(s)
             x, y = train_set.batch(FLAGS.batch_size)
             loss = model.train_on_batch(x, y)
