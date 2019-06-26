@@ -13,6 +13,7 @@ from data import get_training_set, get_eval_set
 from net import SRModel, RBPN
 import args
 
+logging.basicConfig(level=logging.INFO)
 FLAGS = args.get()
 
 def psnr(y_true, y_pred):
@@ -28,7 +29,7 @@ def load_weights(model):
     path_info = os.path.join(FLAGS.model_dir, 'info')
     if os.path.isfile(path_info):
         f = open(path_info)
-        filename = f.readline()
+        filename = f.readline().strip()
         f.close()
         path = os.path.join(FLAGS.model_dir, filename)
         if os.path.isfile(path):
@@ -66,7 +67,7 @@ def main(not_parsed_args):
     logging.info('Training start')
     for e in range(last_epoch, FLAGS.epochs):
         tensorboard.on_epoch_begin(e)
-        for s in range(last_step+1, len(train_set)):
+        for s in range(last_step+1, len(train_set) / FLAGS.batch_size):
             tensorboard.on_batch_begin(s)
             x, y = train_set.batch(FLAGS.batch_size)
             loss = model.train_on_batch(x, y)
@@ -88,7 +89,7 @@ def main(not_parsed_args):
 
             if s > 0 and s % FLAGS.save_interval == 0:
                 logging.info('Saving model')
-                filename = 'model_%d_%d.h5' % (e+1, s)
+                filename = 'model_%d_%d.h5' % (e, s)
                 path = os.path.join(FLAGS.model_dir, filename)
                 path_info = os.path.join(FLAGS.model_dir, 'info')
                 model.save_weights(path)
@@ -96,6 +97,7 @@ def main(not_parsed_args):
                 f.write(filename)
                 f.close()
         tensorboard.on_epoch_end(e)
+        last_step = -1
 
 if __name__ == '__main__':
     tf.app.run()

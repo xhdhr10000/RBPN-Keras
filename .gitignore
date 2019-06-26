@@ -2,3 +2,7 @@
 __pycache__
 venv
 dataset/*
+models/
+tf_logs/
+log
+*.log
