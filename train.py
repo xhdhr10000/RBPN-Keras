@@ -38,6 +38,11 @@ def load_weights(model):
             step = int(filename.split('.')[0].split('_')[2])
     return epoch, step
 
+def named_logs(model, logs, step):
+  result = { 'batch': step, 'size': FLAGS.batch_size }
+  for l in zip(model.metrics_names, logs):
+    result[l[0]] = l[1]
+  return result
 
 def main(not_parsed_args):
     logging.info('Build dataset')
@@ -55,16 +60,20 @@ def main(not_parsed_args):
                 metrics=[psnr])
 
     # checkpoint = ModelCheckpoint('models/model.hdf5', verbose=1)
-    # tensorboard = TensorBoard(log_dir='./tf_logs')
+    tensorboard = TensorBoard(log_dir='./tf_logs', batch_size=FLAGS.batch_size, write_graph=False, write_grads=True, write_images=True, update_freq='batch')
+    tensorboard.set_model(model)
 
     logging.info('Training start')
     for e in range(last_epoch, FLAGS.epochs):
-        for s in range(last_step, len(train_set)):
+        tensorboard.on_epoch_begin(e)
+        for s in range(last_step+1, len(train_set)):
+            tensorboard.on_batch_begin(s)
             x, y = train_set.batch(FLAGS.batch_size)
             loss = model.train_on_batch(x, y)
             print('Epoch %d step %d, loss %f psnr %f' % (e, s, loss[0], loss[1]))
+            tensorboard.on_batch_end(s, named_logs(model, loss, s))
 
-            if FLAGS.dataset_val  and s % FLAGS.val_interval == 0:
+            if FLAGS.dataset_val and s > 0 and s % FLAGS.val_interval == 0:
                 logging.info('Validation start')
                 val_loss = 0
                 val_psnr = 0
@@ -86,7 +95,7 @@ def main(not_parsed_args):
                 f = open(path_info, 'w')
                 f.write(filename)
                 f.close()
-                break
+        tensorboard.on_epoch_end(e)
 
 if __name__ == '__main__':
     tf.app.run()
