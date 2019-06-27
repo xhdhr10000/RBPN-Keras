@@ -1,6 +1,9 @@
 import numpy as np
 from keras.models import Sequential, Model
 from keras.layers import Dense, Activation, Conv2D, Conv2DTranspose, Flatten, Concatenate, Input, PReLU, Add, Subtract, ReLU, LeakyReLU
+import args
+
+FLAGS = args.get()
 
 """
 DCSCN Model
@@ -75,15 +78,15 @@ def ResnetBlock(x, filters):
 
 def res_feat1(x):
     out = x
-    for i in range(5):
-        out = ResnetBlock(out, 256)
+    for i in range(FLAGS.res_number):
+        out = ResnetBlock(out, FLAGS.feat_filters)
     out = Conv2DTranspose(64, 8, strides=(4,4), padding='same')(out)
     out = PReLU(shared_axes=[1,2])(out)
     return out
 
 def res_feat2(x):
     out = x
-    for i in range(5):
+    for i in range(FLAGS.res_number):
         out = ResnetBlock(out, 64)
     out = Conv2D(64, 3, padding='same')(out)
     out = PReLU(shared_axes=[1,2])(out)
@@ -91,9 +94,9 @@ def res_feat2(x):
 
 def res_feat3(x):
     out = x
-    for i in range(5):
+    for i in range(FLAGS.res_number):
         out = ResnetBlock(out, 64)
-    out = Conv2D(256, 8, strides=(4,4), padding='same')(out)
+    out = Conv2D(FLAGS.feat_filters, 8, strides=(4,4), padding='same')(out)
     out = PReLU(shared_axes=[1,2])(out)
     return out
 
@@ -102,14 +105,14 @@ def RBPN():
     neighbor = [Input(shape=(None, None, 3)) for i in range(6)]
     flow = [Input(shape=(None, None, 2)) for i in range(6)]
 
-    feat0 = Conv2D(256, 3, padding='same')(x)
+    feat0 = Conv2D(FLAGS.feat_filters, 3, padding='same')(x)
     feat_input = PReLU(shared_axes=[1,2])(feat0)
 
     Ht = []
     for i in range(len(neighbor)):
         h0 = DBPN(feat_input)
         cat_input = Concatenate()([x, neighbor[i], flow[i]])
-        feat1 = Conv2D(256, 3, padding='same')(cat_input)
+        feat1 = Conv2D(FLAGS.feat_filters, 3, padding='same')(cat_input)
         act1 = PReLU(shared_axes=[1,2])(feat1)
         h1 = res_feat1(act1)
         e = Subtract()([h0, h1])

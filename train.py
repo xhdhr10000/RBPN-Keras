@@ -47,7 +47,6 @@ def named_logs(model, logs, step):
 
 def main(not_parsed_args):
     logging.info('Build dataset')
-    # x_train, x_train_b, y_train, x_val, x_val_b, y_val = load_images()
     train_set = get_training_set(FLAGS.dataset, FLAGS.frames, FLAGS.scale, True, 'filelist.txt', True, FLAGS.patch_size, FLAGS.future_frame)
     if FLAGS.dataset_val:
         val_set = get_eval_set(FLAGS.dataset_val, FLAGS.frames, FLAGS.scale, True, 'filelist.txt', True, FLAGS.patch_size, FLAGS.future_frame)

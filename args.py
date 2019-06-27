@@ -10,6 +10,9 @@ flags.DEFINE_integer('patch_size', 32, 'Patch size for training')
 flags.DEFINE_integer('frames', 7, 'Frames to use for one-frame super resolution training')
 flags.DEFINE_boolean('future_frame', True, 'Use future frame for training')
 
+flags.DEFINE_integer('feat_filters', 256, 'Number of filters to extract feature')
+flags.DEFINE_integer('res_number', 5, 'Number of resnet blocks in feature extractor')
+
 flags.DEFINE_integer('epochs', 10000, 'Training epochs')
 flags.DEFINE_integer('batch_size', 2, 'Batch size for training')
 flags.DEFINE_float('lr', 0.0001, 'Learning rate')
