@@ -8,7 +8,6 @@ from keras.models import load_model
 from PIL import Image
 
 from data import get_eval_set, get_test_set
-from train import loss, psnr
 from net import RBPN
 import args
 from args import flags, FLAGS
@@ -30,20 +29,15 @@ def main(not_parsed_args):
     logging.info('Loading model...')
     model = RBPN()
     model.load_weights(FLAGS.model)
-    # model.compile(optimizer=optimizers.Adam(FLAGS.lr),
-    #             loss=losses.mae,
-    #             metrics=[psnr])
 
     logging.info('Test start...')
     for s in range(len(test_dataset)):
+        logging.info('Step %d' % s)
         x, _, filenames = test_dataset.batch()
         y = model.predict(x)
         y *= 255.0
-        Image.fromarray(y[0].astype(np.uint8), mode='rgb').save(os.path.join(FLAGS.output_dir, filenames[0]))
-    logging.info('Test finished. Average loss %f psnr %f' % (loss_total, psnr_total))
-
-    Image.fromarray(y[0,:,:,0].astype(np.uint8), mode='L').show()
-    Image.fromarray(y_true[:,:,0].astype(np.uint8), mode='L').show()
+        Image.fromarray(y[0].astype(np.uint8), mode='RGB').save(os.path.join(FLAGS.output_dir, filenames[0]))
+    logging.info('Test finished')
 
 if __name__ == '__main__':
     tf.app.run()
