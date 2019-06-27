@@ -17,7 +17,7 @@ logging.basicConfig(level=logging.INFO)
 FLAGS = args.get()
 
 def psnr(y_true, y_pred):
-    return 10. * K.log(255.*255. / K.mean(K.square(y_pred - y_true))) / K.log(10.)
+    return 10. * K.log(255.*255. / K.mean(K.square(y_pred*255.0 - y_true*255.0))) / K.log(10.)
 
 def loss(y_true, y_pred):
     p = psnr(y_true, y_pred)
@@ -55,8 +55,8 @@ def main(not_parsed_args):
     model = RBPN()
     model.summary()
     last_epoch, last_step = load_weights(model)
-    model.compile(optimizer=optimizers.Adam(0.0001),
-                loss=losses.mse,
+    model.compile(optimizer=optimizers.Adam(FLAGS.lr),
+                loss=losses.mae,
                 metrics=[psnr])
 
     # checkpoint = ModelCheckpoint('models/model.hdf5', verbose=1)
