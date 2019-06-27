@@ -196,10 +196,10 @@ class DatasetFromFolder():
             
         # bicubic = rescale_img(input, self.upscale_factor)
         
-        target = np.asarray(target)
-        input = np.asarray(input)
-        neigbor = [np.asarray(i) for i in neigbor]
-        flow = [np.asarray(i) for i in flow]
+        target = np.asarray(target, dtype='float32') / 255.0
+        input = np.asarray(input, dtype='float32') / 255.0
+        neigbor = [np.asarray(i, dtype='float32') / 255.0 for i in neigbor]
+        flow = [np.asarray(i, dtype='float32') for i in flow]
         # bicubic = np.asarray(bicubic)
 
         return input, neigbor, flow, target
@@ -253,9 +253,9 @@ class DatasetFromFolderTest():
 
         # bicubic = rescale_img(input, self.upscale_factor)
         
-        target = np.asarray(target)
-        input = np.asarray(input)
-        neigbor = [np.asarray(i) for i in neigbor]
+        target = np.asarray(target, dtype='float32') / 255.0
+        input = np.asarray(input, dtype='float32') / 255.0
+        neigbor = [np.asarray(i, dtype='float32') / 255.0 for i in neigbor]
         flow = [np.asarray(i) for i in flow]
 
         return input, neigbor, flow, target
