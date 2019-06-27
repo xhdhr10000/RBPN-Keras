@@ -271,7 +271,7 @@ class DatasetFromFolderTest():
         for i in range(size):
             input, neighbor, flow, target = self.__getitem__(self.index)
             if withName:
-                filenames.append(self.image_filenames[self.index])
+                filenames.append(self.image_filenames[self.index].split('/')[-1])
             self.index = (self.index+1) % len(self.image_filenames)
             inputs.append(input)
             neighbors.append(neighbor)

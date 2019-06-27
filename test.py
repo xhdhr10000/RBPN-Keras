@@ -16,10 +16,7 @@ flags.DEFINE_string('model', None, 'Saved model for evaluation')
 flags.DEFINE_string('input_dir', None, 'Low resolution images')
 flags.DEFINE_string('output_dir', None, 'Output high resolution images')
 
-def cal_psnr(y_true, y_pred):
-    print(y_true.shape)
-    print(y_pred.shape)
-    return 10. * np.log10(255.0*255.0 / np.mean(np.square(y_pred - y_true)))
+logging.basicConfig(level=logging.INFO)
 
 def main(not_parsed_args):
     logging.info('Loading evaluation dataset...')
@@ -33,7 +30,7 @@ def main(not_parsed_args):
     logging.info('Test start...')
     for s in range(len(test_dataset)):
         logging.info('Step %d' % s)
-        x, _, filenames = test_dataset.batch()
+        x, _, filenames = test_dataset.batch(withName=True)
         y = model.predict(x)
         y *= 255.0
         Image.fromarray(y[0].astype(np.uint8), mode='RGB').save(os.path.join(FLAGS.output_dir, filenames[0]))
