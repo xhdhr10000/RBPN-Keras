@@ -12,6 +12,7 @@ from net import RBPN
 from train import psnr
 
 flags.DEFINE_string('model', None, 'Saved model for evaluation')
+flags.DEFINE_string('model2', None, 'Another model for average')
 flags.DEFINE_string('input_dir', None, 'Low resolution images')
 flags.DEFINE_string('label_dir', None, 'High resolution images')
 
@@ -25,8 +26,14 @@ def main(not_parsed_args):
     logging.info('Loading model...')
     model = RBPN()
     model.load_weights(FLAGS.model)
-    model.compile(optimizer=optimizers.Adam(0.0001),
-                loss=losses.mse,
+    model.compile(optimizer=optimizers.Adam(FLAGS.lr),
+                loss=losses.mae,
+                metrics=[psnr])
+    if FLAGS.model2:
+        model2 = RBPN()
+        model2.load_weights(FLAGS.model2)
+        model2.compile(optimizer=optimizers.Adam(FLAGS.lr),
+                loss=losses.mae,
                 metrics=[psnr])
 
     logging.info('Evaluation start...')
@@ -34,10 +41,17 @@ def main(not_parsed_args):
     psnr_total = 0
     for s in range(len(eval_dataset)):
         x, y = eval_dataset.batch()
-        log = model.test_on_batch(x, y)
-        logging.info('Step %d, loss %f psnr %f' % (s, log[0], log[1]))
-        loss_total += log[0]
-        psnr_total += log[1]
+        if FLAGS.model2:
+            y1 = model.predict(x)
+            y2 = model2.predict(x)
+            log = psnr(y, (y1+y2)/2.0)
+            logging.info('Step %d, psnr %f' % (s, log))
+            psnr_total += log
+        else:
+            log = model.test_on_batch(x, y)
+            logging.info('Step %d, loss %f psnr %f' % (s, log[0], log[1]))
+            loss_total += log[0]
+            psnr_total += log[1]
     loss_total /= len(eval_dataset)
     psnr_total /= len(eval_dataset)
     logging.info('Evaluation finished. Average loss %f psnr %f' % (loss_total, psnr_total))
