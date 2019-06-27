@@ -8,6 +8,9 @@ import pyflow
 from skimage import img_as_float
 from random import randrange
 import os.path
+import args
+
+FLAGS = args.get()
 
 def is_image_file(filename):
     return any(filename.endswith(extension) for extension in [".png", ".jpg", ".jpeg"])
@@ -193,16 +196,17 @@ class DatasetFromFolder():
             input, target, neigbor, _ = augment(input, target, neigbor)
             
         flow = [get_flow(input,j) for j in neigbor]
-            
-        # bicubic = rescale_img(input, self.upscale_factor)
+
+        if FLAGS.residual:
+            bicubic = rescale_img(input, self.upscale_factor)
+            bicubic = np.asarray(bicubic, dtype='float32') / 255.0
         
         target = np.asarray(target, dtype='float32') / 255.0
         input = np.asarray(input, dtype='float32') / 255.0
         neigbor = [np.asarray(i, dtype='float32') / 255.0 for i in neigbor]
         flow = [np.asarray(i, dtype='float32') for i in flow]
-        # bicubic = np.asarray(bicubic)
 
-        return input, neigbor, flow, target
+        return input, neigbor, flow, bicubic, target
 
     def __len__(self):
         return len(self.image_filenames)
@@ -211,17 +215,21 @@ class DatasetFromFolder():
         inputs = []
         neighbors = []
         flows = []
+        bicubics = []
         y = []
         for i in range(size):
-            input, neighbor, flow, target = self.__getitem__(self.indexes[self.index])
+            input, neighbor, flow, bicubic, target = self.__getitem__(self.indexes[self.index])
             self.index = (self.index+1) % len(self.indexes)
             inputs.append(input)
             neighbors.append(neighbor)
             flows.append(flow)
+            bicubics.append(bicubic)
             y.append(target)
         neighbors = np.array(neighbors).swapaxes(0,1)
         flows = np.array(flows).swapaxes(0,1)
         x = [np.array(inputs)] + [n for n in neighbors] + [f for f in flows]
+        if FLAGS.residual:
+            x += [np.array(bicubics)]
         y = np.array(y)
         return x, y
         
@@ -253,33 +261,39 @@ class DatasetFromFolderTest():
 
         flow = [get_flow(input,j) for j in neigbor]
 
-        # bicubic = rescale_img(input, self.upscale_factor)
+        if FLAGS.residual:
+            bicubic = rescale_img(input, self.upscale_factor)
+            bicubic = np.asarray(bicubic, dtype='float32') / 255.0
         
         target = np.asarray(target, dtype='float32') / 255.0
         input = np.asarray(input, dtype='float32') / 255.0
         neigbor = [np.asarray(i, dtype='float32') / 255.0 for i in neigbor]
         flow = [np.asarray(i) for i in flow]
 
-        return input, neigbor, flow, target
+        return input, neigbor, flow, bicubic, target
       
     def batch(self, size=1, withName=False):
         inputs = []
         neighbors = []
         flows = []
+        bicubics = []
         y = []
         filenames = []
         for i in range(size):
-            input, neighbor, flow, target = self.__getitem__(self.index)
+            input, neighbor, flow, bicubic, target = self.__getitem__(self.index)
             if withName:
                 filenames.append(self.image_filenames[self.index].split('/')[-1])
             self.index = (self.index+1) % len(self.image_filenames)
             inputs.append(input)
             neighbors.append(neighbor)
             flows.append(flow)
+            bicubics.append(bicubic)
             y.append(target)
         neighbors = np.array(neighbors).swapaxes(0,1)
         flows = np.array(flows).swapaxes(0,1)
         x = [np.array(inputs)] + [n for n in neighbors] + [f for f in flows]
+        if FLAGS.residual:
+            x += [np.array(bicubics)]
         y = np.array(y)
         return x, y, filenames
 

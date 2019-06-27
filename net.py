@@ -102,8 +102,10 @@ def res_feat3(x):
 
 def RBPN():
     x = Input(shape=(None, None, 3))
-    neighbor = [Input(shape=(None, None, 3)) for i in range(6)]
-    flow = [Input(shape=(None, None, 2)) for i in range(6)]
+    neighbor = [Input(shape=(None, None, 3)) for i in range(FLAGS.frames-1)]
+    flow = [Input(shape=(None, None, 2)) for i in range(FLAGS.frames-1)]
+    if FLAGS.residual:
+        bicubic = Input(shape=(None, None, 3))
 
     feat0 = Conv2D(FLAGS.feat_filters, 3, padding='same')(x)
     feat_input = PReLU(shared_axes=[1,2])(feat0)
@@ -124,4 +126,7 @@ def RBPN():
     cat_output = Concatenate()(Ht)
     y = Conv2D(3, 3, padding='same')(cat_output)
     xs = [x] + neighbor + flow
+    if FLAGS.residual:
+        xs += [bicubic]
+        y = Add()([y, bicubic])
     return Model(inputs=xs, outputs=y)
