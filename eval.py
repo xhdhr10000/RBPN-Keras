@@ -18,6 +18,9 @@ flags.DEFINE_string('label_dir', None, 'High resolution images')
 
 logging.basicConfig(level=logging.INFO)
 
+def cal_psnr(y_true, y_pred):
+    return 10. * np.log10(255.0*255.0 / np.mean(np.square(y_pred*255. - y_true*255.)))
+
 def main(not_parsed_args):
     logging.info('Loading evaluation dataset...')
     eval_dataset = get_test_set(FLAGS.input_dir, FLAGS.label_dir, FLAGS.frames, 1, 'filelist.txt', True, FLAGS.future_frame)
@@ -44,7 +47,7 @@ def main(not_parsed_args):
         if FLAGS.model2:
             y1 = model.predict(x)
             y2 = model2.predict(x)
-            log = psnr(y, (y1+y2)/2.0)
+            log = cal_psnr(y, (y1+y2)/2.0)
             logging.info('Step %d, psnr %f' % (s, log))
             psnr_total += log
         else:

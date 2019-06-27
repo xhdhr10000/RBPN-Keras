@@ -232,8 +232,10 @@ class DatasetFromFolderTest():
         super(DatasetFromFolderTest, self).__init__()
         alist = [line.rstrip() for line in open(join(image_dir,file_list))]
         self.image_filenames = [join(image_dir,x) for x in alist]
-        alist = [line.rstrip() for line in open(join(label_dir,file_list))]
-        self.label_filenames = [join(label_dir,x) for x in alist]
+        self.label_filenames = None
+        if label_dir:
+            alist = [line.rstrip() for line in open(join(label_dir,file_list))]
+            self.label_filenames = [join(label_dir,x) for x in alist]
         self.nFrames = nFrames
         self.upscale_factor = upscale_factor
         self.other_dataset = other_dataset
@@ -260,13 +262,16 @@ class DatasetFromFolderTest():
 
         return input, neigbor, flow, target
       
-    def batch(self, size=1):
+    def batch(self, size=1, withName=False):
         inputs = []
         neighbors = []
         flows = []
         y = []
+        filenames = []
         for i in range(size):
             input, neighbor, flow, target = self.__getitem__(self.index)
+            if withName:
+                filenames.append(self.image_filenames[self.index])
             self.index = (self.index+1) % len(self.image_filenames)
             inputs.append(input)
             neighbors.append(neighbor)
@@ -276,7 +281,7 @@ class DatasetFromFolderTest():
         flows = np.array(flows).swapaxes(0,1)
         x = [np.array(inputs)] + [n for n in neighbors] + [f for f in flows]
         y = np.array(y)
-        return x, y
+        return x, y, filenames
 
     def __len__(self):
         return len(self.image_filenames)
