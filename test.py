@@ -20,7 +20,7 @@ logging.basicConfig(level=logging.INFO)
 
 def main(not_parsed_args):
     logging.info('Loading evaluation dataset...')
-    test_dataset = get_test_set(FLAGS.input_dir, None, FLAGS.frames, 1, 'filelist.txt', True, FLAGS.future_frame)
+    test_dataset = get_test_set(FLAGS.input_dir, None, FLAGS.frames, 4, 'filelist.txt', True, FLAGS.future_frame)
     logging.info('done. size %d' % len(test_dataset))
 
     logging.info('Loading model...')

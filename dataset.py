@@ -43,13 +43,14 @@ def load_img(filepath, nFrames, scale, other_dataset):
     
     return target, input, neigbor
 
-def load_img_future(filepath, nFrames, scale, other_dataset):
+def load_img_future(filepath, nFrames, scale, other_dataset, lr=False):
     tt = int(nFrames/2)
     if other_dataset:
-        target = modcrop(Image.open(filepath).convert('RGB'),scale)
-        if scale == 1:
-            input = target
+        if lr:
+            input = Image.open(filepath).convert('RGB')
+            target = None
         else:
+            target = modcrop(Image.open(filepath).convert('RGB'),scale)
             input = target.resize((int(target.size[0]/scale),int(target.size[1]/scale)), Image.BICUBIC)
         
         char_len = len(filepath)
@@ -64,8 +65,10 @@ def load_img_future(filepath, nFrames, scale, other_dataset):
             file_name1=filepath[0:char_len-7]+'{0:03d}'.format(index1)+'.png'
             
             if os.path.exists(file_name1):
-                temp = modcrop(Image.open(file_name1).convert('RGB'), scale)
-                if scale > 1:
+                if lr:
+                    temp = Image.open(file_name1).convert('RGB')
+                else:
+                    temp = modcrop(Image.open(file_name1).convert('RGB'), scale)
                     temp = temp.resize((int(target.size[0]/scale),int(target.size[1]/scale)), Image.BICUBIC)
                 neigbor.append(temp)
             else:
@@ -235,7 +238,7 @@ class DatasetFromFolder():
         
 
 class DatasetFromFolderTest():
-    def __init__(self, image_dir, label_dir, nFrames, upscale_factor, file_list, other_dataset, future_frame):
+    def __init__(self, image_dir, label_dir, nFrames, upscale_factor, file_list, other_dataset, future_frame, lr=True):
         ''' Make sure the sequences in file_list for image_dir & label_dir are the same '''
         super(DatasetFromFolderTest, self).__init__()
         alist = [line.rstrip() for line in open(join(image_dir,file_list))]
@@ -248,11 +251,12 @@ class DatasetFromFolderTest():
         self.upscale_factor = upscale_factor
         self.other_dataset = other_dataset
         self.future_frame = future_frame
+        self.lr = lr
         self.index = 0
 
     def __getitem__(self, index):
         if self.future_frame:
-            target, input, neigbor = load_img_future(self.image_filenames[index], self.nFrames, self.upscale_factor, self.other_dataset)
+            target, input, neigbor = load_img_future(self.image_filenames[index], self.nFrames, self.upscale_factor, self.other_dataset, self.lr)
         else:
             target, input, neigbor = load_img(self.image_filenames[index], self.nFrames, self.upscale_factor, self.other_dataset)
 
@@ -264,6 +268,8 @@ class DatasetFromFolderTest():
         if FLAGS.residual:
             bicubic = rescale_img(input, self.upscale_factor)
             bicubic = np.asarray(bicubic, dtype='float32') / 255.0
+        else:
+            bicubic = None
         
         target = np.asarray(target, dtype='float32') / 255.0
         input = np.asarray(input, dtype='float32') / 255.0
