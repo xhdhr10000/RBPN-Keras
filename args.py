@@ -10,6 +10,7 @@ flags.DEFINE_integer('patch_size', 32, 'Patch size for training')
 flags.DEFINE_integer('frames', 7, 'Frames to use for one-frame super resolution training')
 flags.DEFINE_boolean('future_frame', True, 'Use future frame for training')
 flags.DEFINE_boolean('residual', True, 'Train with bicubic image')
+flags.DEFINE_boolean('bn', False, 'Batch normalization after feat0 & feat1')
 
 flags.DEFINE_integer('feat_filters', 256, 'Number of filters to extract feature')
 flags.DEFINE_integer('res_number', 5, 'Number of resnet blocks in feature extractor')

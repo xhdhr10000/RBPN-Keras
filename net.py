@@ -1,6 +1,6 @@
 import numpy as np
 from keras.models import Sequential, Model
-from keras.layers import Dense, Activation, Conv2D, Conv2DTranspose, Flatten, Concatenate, Input, PReLU, Add, Subtract, ReLU, LeakyReLU
+from keras.layers import Dense, Activation, Conv2D, Conv2DTranspose, Flatten, Concatenate, Input, PReLU, Add, Subtract, ReLU, LeakyReLU, BatchNormalization
 import args
 
 FLAGS = args.get()
@@ -108,6 +108,8 @@ def RBPN():
         bicubic = Input(shape=(None, None, 3))
 
     feat0 = Conv2D(FLAGS.feat_filters, 3, padding='same')(x)
+    if FLAGS.bn:
+        feat0 = BatchNormalization()(feat0)
     feat_input = PReLU(shared_axes=[1,2])(feat0)
 
     Ht = []
@@ -115,6 +117,8 @@ def RBPN():
         h0 = DBPN(feat_input)
         cat_input = Concatenate()([x, neighbor[i], flow[i]])
         feat1 = Conv2D(FLAGS.feat_filters, 3, padding='same')(cat_input)
+        if FLAGS.bn:
+            feat1 = BatchNormalization()(feat1)
         act1 = PReLU(shared_axes=[1,2])(feat1)
         h1 = res_feat1(act1)
         e = Subtract()([h0, h1])
