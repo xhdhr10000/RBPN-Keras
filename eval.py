@@ -23,7 +23,7 @@ def cal_psnr(y_true, y_pred):
 
 def main(not_parsed_args):
     logging.info('Loading evaluation dataset...')
-    eval_dataset = get_test_set(FLAGS.input_dir, FLAGS.label_dir, FLAGS.frames, 1, 'filelist.txt', True, FLAGS.future_frame)
+    eval_dataset = get_test_set(FLAGS.input_dir, FLAGS.label_dir, FLAGS.frames, 4, 'filelist.txt', True, FLAGS.future_frame)
     logging.info('done. size %d' % len(eval_dataset))
 
     logging.info('Loading model...')
@@ -43,7 +43,7 @@ def main(not_parsed_args):
     loss_total = 0
     psnr_total = 0
     for s in range(len(eval_dataset)):
-        x, y = eval_dataset.batch()
+        x, y, _ = eval_dataset.batch()
         if FLAGS.model2:
             y1 = model.predict(x)
             y2 = model2.predict(x)
