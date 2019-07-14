@@ -47,9 +47,9 @@ def named_logs(model, logs, step):
 
 def main(not_parsed_args):
     logging.info('Build dataset')
-    train_set = get_training_set(FLAGS.dataset, FLAGS.frames, FLAGS.scale, True, 'filelist.txt', True, FLAGS.patch_size, FLAGS.future_frame)
+    train_set = get_training_set(FLAGS.dataset_h, FLAGS.dataset_l, FLAGS.frames, FLAGS.scale, True, 'filelist.txt', True, FLAGS.patch_size, FLAGS.future_frame)
     if FLAGS.dataset_val:
-        val_set = get_eval_set(FLAGS.dataset_val, FLAGS.frames, FLAGS.scale, True, 'filelist.txt', True, FLAGS.patch_size, FLAGS.future_frame)
+        val_set = get_eval_set(FLAGS.dataset_val_h, FLAGS.dataset_val_l, FLAGS.frames, FLAGS.scale, True, 'filelist.txt', True, FLAGS.patch_size, FLAGS.future_frame)
 
     logging.info('Build model')
     model = RBPN()
@@ -73,7 +73,7 @@ def main(not_parsed_args):
             print('Epoch %d step %d, loss %f psnr %f' % (e, s, loss[0], loss[1]))
             tensorboard.on_batch_end(s, named_logs(model, loss, s))
 
-            if FLAGS.dataset_val and s > 0 and s % FLAGS.val_interval == 0:
+            if FLAGS.dataset_val and s > 0 and s % FLAGS.val_interval == 0 or s == len(train_set) // FLAGS.batch_size - 1:
                 logging.info('Validation start')
                 val_loss = 0
                 val_psnr = 0
@@ -86,7 +86,7 @@ def main(not_parsed_args):
                 val_psnr /= len(val_set)
                 logging.info('Validation average loss %f psnr %f' % (val_loss, val_psnr))
 
-            if s > 0 and s % FLAGS.save_interval == 0:
+            if s > 0 and s % FLAGS.save_interval == 0 or s == len(train_set) // FLAGS.batch_size - 1:
                 logging.info('Saving model')
                 filename = 'model_%d_%d.h5' % (e, s)
                 path = os.path.join(FLAGS.model_dir, filename)

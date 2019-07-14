@@ -172,10 +172,14 @@ def rescale_img(img_in, scale):
     return img_in
 
 class DatasetFromFolder():
-    def __init__(self, image_dir,nFrames, upscale_factor, data_augmentation, file_list, other_dataset, patch_size, future_frame):
+    def __init__(self, image_dir, label_dir, nFrames, upscale_factor, data_augmentation, file_list, other_dataset, patch_size, future_frame):
         super(DatasetFromFolder, self).__init__()
         alist = [line.rstrip() for line in open(join(image_dir,file_list))]
         self.image_filenames = [join(image_dir,x) for x in alist]
+        self.label_filenames = None
+        if label_dir:
+            alist = [line.rstrip() for line in open(join(label_dir,file_list))]
+            self.label_filenames = [join(label_dir,x) for x in alist]
         self.nFrames = nFrames
         self.upscale_factor = upscale_factor
         self.data_augmentation = data_augmentation
@@ -188,9 +192,12 @@ class DatasetFromFolder():
 
     def __getitem__(self, index):
         if self.future_frame:
-            target, input, neigbor = load_img_future(self.image_filenames[index], self.nFrames, self.upscale_factor, self.other_dataset)
+            target, input, neigbor = load_img_future(self.image_filenames[index], self.nFrames, self.upscale_factor, self.other_dataset, self.label_filenames)
         else:
             target, input, neigbor = load_img(self.image_filenames[index], self.nFrames, self.upscale_factor, self.other_dataset)
+
+        if self.label_filenames:
+            target = Image.open(self.label_filenames[index]).convert('RGB')
 
         if self.patch_size != 0:
             input, target, neigbor, _ = get_patch(input,target,neigbor,self.patch_size, self.upscale_factor, self.nFrames)
